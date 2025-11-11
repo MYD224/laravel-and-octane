@@ -1,19 +1,25 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Modules\Authentication\Interface\Http\Controllers\Api\V1\AuthController;
 use Illuminate\Support\Facades\Route;
-use App\Interfaces\Http\Controllers\Booking\BookingController;
-use App\Interfaces\Http\Controllers\Booking\BookingControllerAnother;
-use App\Interfaces\Http\Controllers\Posts\PostController;
+use App\Modules\Post\Interface\Http\Controllers\Api\V1\PostController;
 
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:api');
 
 
-Route::post("/bookings", [BookingController::class, 'store']);
+Route::prefix('v1')->group(function () { 
 
-Route::get("/tickets", [BookingControllerAnother::class, 'another']);
+    Route::post("register", [AuthController::class, 'register'] );
+    Route::post('login', [AuthController::class, 'login']);
 
-Route::resource("posts", PostController::class);
+    Route::middleware(['auth:api'])->group(function () {
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::resource("/posts", PostController::class);
+    });
+    
+    Route::post('/verify-phone', [AuthController::class, 'verifyPhone']);
+    
+    
+});
+

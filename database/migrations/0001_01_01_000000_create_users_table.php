@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('fullname');
-            $table->string('email')->unique();
-            $table->string("phone")->unique();
+            $table->string('email')->nullable()->unique();
+            $table->string("phone")->nullable()->unique();
             $table->string('role')->default('user'); 
-            $table->string('username')->unique();
+            // $table->string('username')->unique();
             
             $table->string('status')->default("active"); // active, suspended
             //wallet balance
-            $table->decimal('wallet_balance', 10, 2)->default(0.00);
+            // $table->decimal('wallet_balance', 10, 2)->default(0.00);
             
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
