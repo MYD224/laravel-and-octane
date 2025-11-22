@@ -3,6 +3,7 @@
 namespace App\Application\Post\Commands;
 
 class CreatePostCommand {
+    
     public function __construct(
         public string $title,
         public string $subtitle,

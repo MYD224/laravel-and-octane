@@ -15,7 +15,7 @@ class BookingService
     public function __construct(private TicketRepositoryInterface $tickets) {}
 
 
-    public function reserveTicket(string $busId, string $userId, string $seat, string $passengerName, float $price, ?string $idempotencyKey = null): Ticket
+    public function reserveTicket(string $busId, string $Id, string $seat, string $passengerName, float $price, ?string $idempotencyKey = null): Ticket
     {
         $seatVO = new SeatNumber($seat);
         $nameVO = new PassengerName($passengerName);
@@ -27,7 +27,7 @@ class BookingService
         }
 
 
-        $ticket = new Ticket($busId, $userId, $seatVO, $nameVO, $priceVO);
+        $ticket = new Ticket($busId, $Id, $seatVO, $nameVO, $priceVO);
 
 
         $this->tickets->save($ticket);

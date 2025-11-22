@@ -2,12 +2,13 @@
 
 namespace App\Application\Post\Handlers;
 
+use App\Application\Api\V1\Post\Data\PostData;
 use App\Application\Post\Commands\CreatePostCommand;
-use App\Application\Post\Data\PostData;
 use App\Domain\Post\Services\PostService;
 
 class CreatePostHandler
 {
+    
     public function __construct(
         private PostService $postService,
     ){}

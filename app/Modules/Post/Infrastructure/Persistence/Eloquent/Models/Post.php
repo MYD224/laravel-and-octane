@@ -1,13 +1,13 @@
 <?php
-namespace App\Infrastructure\Persistence\Eloquent\Models\Post;
+namespace App\Modules\Post\Infrastructure\Persistence\Eloquent\Models;
 
 use App\Domain\Post\Enums\PostStatus;
+use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 
 
 
@@ -131,7 +131,7 @@ class Post extends Model
      */
     public function author()
     {
-        $userModel = config('auth.providers.users.model') ?? \App\Models\User::class;
+        $userModel = config('auth.providers.users.model') ?? User::class;
         return $this->belongsTo($userModel, 'author_id');
     }
 

@@ -1,15 +1,15 @@
 <?php
 
-use App\Domain\Booking\Repositories\PostRepositoryInterface;
-use App\Domain\Post\Entities\Post;
-use App\Infrastructure\Persistence\Eloquent\Models\Post\Post as PostPost;
+use App\Modules\Post\Infrastructure\Persistence\Eloquent\Models\Post;
+use App\Modules\Post\Domain\Entities\Post as PostEntity;
+use App\Modules\Post\Domain\Repositories\PostRepositoryInterface;
 
 class EloquentPostRepository implements PostRepositoryInterface {
 
-    public function save(Post $post): Post {
+    public function save(PostEntity $post): PostEntity {
 
         
-        $post = PostPost::create(
+        $post = Post::create(
             [
                 'title' => $post->title,
                 'subtitle' => $post->subtitle,
@@ -23,7 +23,7 @@ class EloquentPostRepository implements PostRepositoryInterface {
             ]
         );
 
-        return new Post(
+        return new PostEntity(
             $post->title,
             $post->subtitle,
             $post->body,
@@ -39,39 +39,39 @@ class EloquentPostRepository implements PostRepositoryInterface {
         
     }
 
-    public function findById(string $id): ?Post {
-        $post = PostPost::find($id);
+    // public function findById(string $id): ?Post {
+    //     $post = PostPost::find($id);
 
-        if (!$post) {
-            return null;
-        }
+    //     if (!$post) {
+    //         return null;
+    //     }
 
-        return new Post(
-            $post->title,
-            $post->subtitle,
-            $post->body,
-            $post->excerpt,
-            $post->is_featured,
-            $post->author_id,
-            $post->published_at,
-            $post->meta,
-            $post->id,
-            $post->slug,
-            $post->status,
-        );
-    }
+    //     return new Post(
+    //         $post->title,
+    //         $post->subtitle,
+    //         $post->body,
+    //         $post->excerpt,
+    //         $post->is_featured,
+    //         $post->author_id,
+    //         $post->published_at,
+    //         $post->meta,
+    //         $post->id,
+    //         $post->slug,
+    //         $post->status,
+    //     );
+    // }
 
 
-    public function exitsByTitleAndAuthorId(string $title, string $authorId, ?string $ignoreId = null): bool {
-        $query = PostPost::where('title', $title)
-                         ->where('author_id', $authorId);
+    // public function exitsByTitleAndAuthorId(string $title, string $authorId, ?string $ignoreId = null): bool {
+    //     $query = PostPost::where('title', $title)
+    //                      ->where('author_id', $authorId);
 
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
+    //     if ($ignoreId) {
+    //         $query->where('id', '!=', $ignoreId);
+    //     }
 
-        return $query->exists();
-    }
+    //     return $query->exists();
+    // }
 
 
 

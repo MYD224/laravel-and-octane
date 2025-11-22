@@ -15,7 +15,7 @@ class EloquentTicketRepository implements TicketRepositoryInterface
     {
         $model = TicketModel::create([
             'bus_id' => $ticket->busId,
-            'user_id' => $ticket->userId,
+            'user_id' => $ticket->Id,
             'seat_number' => $ticket->seatNumber()->value(),
             'passenger_name' => $ticket->passengerName()->value(),
             'price' => $ticket->price()->value(),

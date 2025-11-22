@@ -1,6 +1,7 @@
 <?php
+namespace App\Modules\Post\Application\V1\Data;
 
-namespace App\Application\Api\V1\Post\Data;
+
 
 use App\Application\User\Data\AuthorData;
 use App\Domain\Post\Entities\Post;

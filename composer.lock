@@ -8012,7 +8012,7 @@
                 ],
                 "classmap": [
                     "lib/DateTime.php",
-                    "lib/DateTimeImmutable.php",
+                    "lib/CarbonImmutable.php",
                     "lib/Exceptions/",
                     "generated/Exceptions/"
                 ]

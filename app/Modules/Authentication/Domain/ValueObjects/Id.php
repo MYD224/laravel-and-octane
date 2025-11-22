@@ -1,19 +1,24 @@
 <?php
 
-namespace App\Domain\Post\ValueObjects;
+namespace App\Modules\Authentication\Domain\ValueObjects;
+use Ramsey\Uuid\Uuid;
 
 final class Id
 {
-
-    public function __construct(private string $id)
+    public function __construct(private string $value)
     {
-        $id = trim($id);
-        
-        $this->id = $id;
+        if (!Uuid::isValid($value)) {
+            throw new \InvalidArgumentException("Invalid UUID");
+        }
     }
 
-    public function getId(): string
+    public static function generate(): self
     {
-        return $this->id;
+        return new self(Uuid::uuid4()->toString());
+    }
+
+    public function value(): string
+    {
+        return $this->value;
     }
 }

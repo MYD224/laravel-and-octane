@@ -27,10 +27,6 @@ return new class extends Migration
 
             $table->index(['title', 'slug', 'subtitle']);
 
-            /*
-            $table->uuid('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            */
 
             $table->foreignUuid('author_id')->constrained('users')->onDelete('cascade');
 

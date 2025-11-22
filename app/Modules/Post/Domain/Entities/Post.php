@@ -1,31 +1,29 @@
 <?php
-
-namespace App\Domain\Post\Entities;
-
+namespace App\Modules\Post\Domain\Entities;
 
 use App\Domain\Post\Enums\PostStatus;
+use App\Domain\Post\ValueObjects\Title;
 
 class Post
 {
-    // Post entity implementation
     
     public function __construct(
-        public ?string $id,
-        public string $title,
-        public ?string $subtitle,
-        public string $body,
-        public ?string $excerpt,
-        public string $slug,
-        public string $authorId,
-        public ?string $status = PostStatus::DRAFT->value,
-        public bool $isFeatured = false,
-        public int $viewsCount = 0,
-        public ?array $meta = null,
-        public ?\DateTimeImmutable $publishedAt = null,
-        public ?\DateTimeImmutable $createdAt = null,
-        public ?\DateTimeImmutable $updatedAt = null,
-        public array $tags = [],
-        public array $categories = [],
+        public readonly string $id,
+        public readonly Title $title,
+        public readonly ?string $subtitle,
+        public readonly string $body,
+        public readonly ?string $excerpt,
+        public readonly string $slug,
+        public readonly string $authorId,
+        public readonly ?string $status = PostStatus::DRAFT->value,
+        public readonly bool $isFeatured = false,
+        public readonly int $viewsCount = 0,
+        public readonly ?array $meta = null,
+        public readonly ?\CarbonImmutable $publishedAt = null,
+        public readonly ?\CarbonImmutable $createdAt = null,
+        public readonly ?\CarbonImmutable $updatedAt = null,
+        public readonly array $tags = [],
+        public readonly array $categories = [],
     ) {}
 
     public function getId(): ?string

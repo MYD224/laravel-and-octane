@@ -3,6 +3,8 @@
 namespace App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Modules\Authentication\Domain\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -51,6 +53,7 @@ class User extends Authenticatable
         'otp_expires_at' => 'datetime',
         'password' => 'hashed',
         'id' => 'string',
+        'status' => UserStatus::class,
     ];
 
 
@@ -58,6 +61,8 @@ class User extends Authenticatable
 
     protected $keyType = 'string';
     protected $primaryKey = 'id';
+    protected $table = 'users';
+
 
 
    public function findForPassport($username)

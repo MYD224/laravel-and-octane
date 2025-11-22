@@ -3,37 +3,29 @@
 namespace App\Modules\Authentication\Interface\Http\Controllers\Api\V1;
 
 use App\Core\Interface\Controllers\BaseController;
+use App\Modules\Authentication\Application\Services\UserService;
+use App\Modules\Authentication\Application\V1\Commands\GenerateOtpCommand;
+use App\Modules\Authentication\Application\V1\Commands\RegisterUserCommand;
+use App\Modules\Authentication\Application\V1\Commands\UpdateUserProfileCommand;
+use App\Modules\Authentication\Application\V1\Handlers\GenerateOtpHandler;
+use App\Modules\Authentication\Application\V1\UseCases\RegisterUserUseCase;
+use App\Modules\Authentication\Application\V1\UseCases\UpdateUserProfileUseCase;
 use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
+
 use Illuminate\Support\Facades\Validator;
 
-//  public function __construct(
-//         private RegisterUser $registerUser,
-//         private LoginUser $loginUser
-//     ) {}
 
-//     public function register(Request $request)
-//     {
-//         $user = $this->registerUser->execute($request->email, $request->password);
-//         return response()->json($user);
-//     }
-
-//     public function login(Request $request)
-//     {
-//         $token = $this->loginUser->execute($request->email, $request->password);
-//         return response()->json(['token' => $token]);
-//     }
 
 class AuthController extends BaseController
 {
 
 
-    public function login(Request $request)
+    public function login(Request $request, UserService $userService)
     {
         $validator = Validator::make($request->all(), [
             'phone'    => 'required|string',
@@ -44,132 +36,103 @@ class AuthController extends BaseController
         }
 
 
-        $user = User::where('phone', $request->phone)->first();
+        $userData = $userService->findByPhone($request->phone);
 
-        if (!$user) {
+        if (!$userData) {
             return response()->json(['message' => 'User not found.'], 404);
         }
 
-        if (!$user->phone_verified_at) {
+        if (!$userData->phoneVerifiedAt ){
             return response()->json(['message' => 'Please verify your phone first.'], 403);
         }
 
         // Revoke old tokens (optional, to ensure one active session)
-        $user->tokens()->delete();
+        $userService->deleteTokens($userData->phone);
 
         // Generate OTP
-        $otp = rand(100000, 999999);
-        $user->update([
-            "otp_code" => (string) $otp,
-            "otp_expires_at" => now()->addMinutes(10)
-        ]);
+        // $otp = rand(100000, 999999);
+         $otp = app(GenerateOtpHandler::class)->handle(
+            new GenerateOtpCommand($userData->id)
+        );
+        // $user->update([
+        //     "otp_code" => $result['otp'],
+        //     "otp_expires_at" => now()->addMinutes(10)
+        // ]);
 
         // Store in DB or cache (Redis) with expiration
-        Cache::put('phone_', $request->phone, now()->addMinutes(5));
+        // Cache::put('phone_', $request->phone, now()->addMinutes(5));
 
         // Send via SMS gateway (or fake for dev)
         // SmsService::send($request->phone, "Your OTP is: {$otp}");
         // TODO: send OTP via SMS or WhatsApp (for now just log it)
-        info("OTP for {$user->phone}: {$otp}");
+        // info("OTP for {$user->phone}: {$otp}");
 
 
         return response()->json([
             'message' => 'Account created successfully. Please verify your phone.',
-            'user' => $user,
+            'user' => $userData,
             'opt' => $otp,
         ]);
     }
 
-    /**
-     * Register a new user and issue a personal access token (Sanctum).
-     */
-    public function register(Request $request)
-    {
+    public function register(
+        Request $request,
+        RegisterUserUseCase $useCase,
+        UpdateUserProfileUseCase $updateProfileUseCase,
+    ) {
 
-        $validator = Validator::make($request->all(), [
-            'fullname'     => 'required|string|max:255',
-            'phone'    => 'required|string|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+        try {
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            $validator = Validator::make($request->all(), [
+                'fullname'     => 'required|string|max:255',
+                'phone'    => 'required|string|max:255|unique:users',
+                'password' => 'required|string|min:6|confirmed',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $command = new RegisterUserCommand(
+                fullname: $request->fullname,
+                phone: $request->phone,
+                email: $request->email ?? 'kalili@gmail.com',
+                password: $request->password
+            );
+
+            $userData = $useCase->execute($command);
+
+            // Generate OTP
+             $otp = app(GenerateOtpHandler::class)->handle(
+                new GenerateOtpCommand($userData->id)
+            );
+
+             $updateCommande = new UpdateUserProfileCommand(
+                 id: $userData->id,
+                 otpCode: (string) $otp,
+                 otpExpiresAt: CarbonImmutable::now()->addMinutes($otp['ttl'])
+             );
+
+             $userData = $updateProfileUseCase->execute($updateCommande);
+
+            // Store in DB or cache (Redis) with expiration
+            // Cache::put('phone_', $request->phone, now()->addMinutes(5));
+
+            // Send via SMS gateway (or fake for dev)
+            // SmsService::send($request->phone, "Your OTP is: {$otp}");
+            // TODO: send OTP via SMS or WhatsApp (for now just log it)
+            info("OTP for {$userData->phone}: {$otp}");
+
+
+
+            return response()->json([
+                'message' => 'Account created',
+                'user' => $userData
+            ]);
+        } catch (\Throwable $th) {
+            throw $th;
         }
-
-
-        $user = User::create([
-            'fullname'  => $request->fullname,
-            'phone'     => $request->phone,
-            'password'  => Hash::make($request->password),
-            'email'    => $request->email ?? null,
-        ]);
-
-
-        // Generate OTP
-        $otp = rand(100000, 999999);
-        $user->update([
-            "otp_code" => (string) $otp,
-            "otp_expires_at" => now()->addMinutes(10)
-        ]);
-
-        // Store in DB or cache (Redis) with expiration
-        Cache::put('phone_', $request->phone, now()->addMinutes(5));
-
-        // Send via SMS gateway (or fake for dev)
-        // SmsService::send($request->phone, "Your OTP is: {$otp}");
-        // TODO: send OTP via SMS or WhatsApp (for now just log it)
-        info("OTP for {$user->phone}: {$otp}");
-
-
-        return response()->json([
-            'user' => $user,
-            'message' => 'Account created successfully. Please verify your phone.',
-        ]);
     }
-
-    /**
-     * Authenticate user and issue a personal access token. Only for OAuth..
-     */
-    // public function login(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'phone'    => 'required|string',
-    //         'password' => 'required|string',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json(['errors' => $validator->errors()], 422);
-    //     }
-
-    //     // Ensure phone is verified
-    //     $user = User::where('phone', $request->phone)->first();
-
-    //     if (!$user) {
-    //         return response()->json(['message' => 'User not found.'], 404);
-    //     }
-
-    //     if (!$user->phone_verified_at) {
-    //         return response()->json(['message' => 'Please verify your phone first.'], 403);
-    //     }
-
-
-    //       // Now generate Passport token
-    //     $response = Http::asForm()->post(config('app.url') . '/oauth/token', [
-    //         'grant_type' => 'password',
-    //         'client_id' => config('services.passport.password_client_id'),
-    //         'client_secret' => config('services.passport.password_client_secret'),
-    //         'username' => $user->phone,
-    //         'scope' => '*',
-    //     ]);
-
-    //     // user:read orders:create
-
-    //     return response()->json([
-    //         'message' => 'User logged in successfully.',
-    //         'token' => $response->json(),
-    //         'user' => $user,
-    //     ]);
-    // }
 
     /**
      * Return authenticated user.

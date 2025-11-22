@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Post\ValueObjects;
+namespace App\Modules\Authentication\Domain\ValueObjects;
 
 
 final class Email

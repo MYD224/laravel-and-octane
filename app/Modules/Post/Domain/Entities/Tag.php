@@ -9,7 +9,7 @@ class Tag
     public function __construct(
         public ?string $id,
         public string $name,
-        public ?\DateTimeImmutable $createdAt = null,
-        public ?\DateTimeImmutable $updatedAt = null,
+        public ?\CarbonImmutable $createdAt = null,
+        public ?\CarbonImmutable $updatedAt = null,
     ) {}
 }

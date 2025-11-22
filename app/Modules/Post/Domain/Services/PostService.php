@@ -1,20 +1,18 @@
 <?php
 
-namespace App\Domain\Post\Services;
+namespace App\Modules\Post\Domain\Services;
 
-use App\Application\Post\Data\CreatePostData;
-use App\Application\Post\Data\PostData;
-use App\Domain\Booking\Repositories\PostRepositoryInterface;
 use App\Domain\Post\Entities\Post;
+use App\Modules\Post\Domain\Repositories\PostRepositoryInterface;
 use Carbon\CarbonImmutable;
 
 class PostService
 {
-    // Define methods for post-related business logic here
-
 
     public function __construct(
-        private PostRepositoryInterface $posts
+        private PostRepositoryInterface $posts,
+        private CategoryRepository $categories,
+        private TagRepository $tags,
     ) {}
 
 

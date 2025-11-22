@@ -11,7 +11,7 @@ class Category
         public ?string $id,
         public string $name,
         public ?string $description = null,
-        public ?\DateTimeImmutable $createdAt = null,
-        public ?\DateTimeImmutable $updatedAt = null,
+        public ?\CarbonImmutable $createdAt = null,
+        public ?\CarbonImmutable $updatedAt = null,
     ) {}
 }
