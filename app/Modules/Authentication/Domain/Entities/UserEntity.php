@@ -16,9 +16,9 @@ class UserEntity
         private Email $email,
         private string $fullname,
         private PhoneNumber $phone,
-        private CarbonImmutable | null $phoneVerifiedAt,
         private string $hashedPassword,
         private UserStatus | string $status = UserStatus::ACTIVE->value,
+        private ?CarbonImmutable $phoneVerifiedAt = null,
         private ?int $otpCode = null,
         private ?CarbonImmutable $otpExpiresAt = null,
         private CarbonImmutable $createdAt = new CarbonImmutable(),
@@ -28,9 +28,12 @@ class UserEntity
 
     public static function register(Id $id, string $fullname,  PhoneNumber $phone, CarbonImmutable | null $phoneVerifiedAt ,Email $email, string|UserStatus $status, string $hashedPassword): self
     {
-        return new self($id, $email, $fullname, $phone, $phoneVerifiedAt ,$hashedPassword, $status);
+        return new self($id, $email, $fullname, $phone,$hashedPassword, $status ,$phoneVerifiedAt);
     }
 
+    public function activate(): void {
+        $this->status = UserStatus::ACTIVE;
+    }
 
    
 
@@ -42,7 +45,7 @@ class UserEntity
         ?string $hashedPassword = null,
         ?int $otpCode = null,
         ?CarbonImmutable $otpExpiresAt = null,
-        ?CarbonImmutable $phoneVerifiedAt,
+        ?CarbonImmutable $phoneVerifiedAt = null,
     ): void {
 
         if ($fullname !== null) {

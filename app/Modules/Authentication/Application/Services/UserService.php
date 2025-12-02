@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-use function Laravel\Prompts\info;
 
 class UserService
 {
@@ -36,6 +35,15 @@ class UserService
      }
 
 
+     public function findById(string $id): ?UserData
+     {
+        $userEntity = $this->eloquentUserRepository->findById((new Id($id))->value());
+        return UserData::fromEntity($userEntity);
+     }
+
+     public function generatPassportToken(string $id): string {
+        return $this->eloquentUserRepository->generatPassportToken($id);
+     }
      public function deleteTokens(string $phone) {
         return $this->eloquentUserRepository->deleteTokens(new PhoneNumber($phone));
 
@@ -69,11 +77,15 @@ class UserService
             $hashedPassword = $password ? $this->hashingService->hash($password) : null;
             $phoneVerifiedAt = CarbonImmutable::parse($phoneVerifiedAt);
             $otpExpiresAt = CarbonImmutable::parse($otpExpiresAt);
+
+            $status = $status ? UserStatus::from($status): $userEntity->getStatus();
+
             // Mettre à jour l'utilisateur
             $userEntity->update(
                 email: $emailVO,
                 fullname: $fullname,
                 phone: $phoneVO,
+                status: $status,
                 phoneVerifiedAt: $phoneVerifiedAt,
                 hashedPassword: $hashedPassword,
                 otpCode: $otpCode,

@@ -19,18 +19,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $myapp = "beetrans";
+
         $this->app->bind(CacheServiceInterface::class, LaravelCacheService::class);
 
         $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
-        $this->app->bind(CacheServiceInterface::class, function () {
-            return new RedisCacheService(prefix: 'myapp:'); // configurable
-
-            //version multi-tenant
-           // new RedisCacheService(prefix: env('APP_ENV') . ':tenant_' . $tenantId . ':');
+        $this->app->bind(CacheServiceInterface::class, function () use($myapp) {
+            return new RedisCacheService(prefix: $myapp.':'); // configurable
 
         });
 
-        $this->app->bind(OtpServiceInterface::class, function () {
+        $this->app->bind(OtpServiceInterface::class, function (){
             return new RedisOtpService(prefix: "otp:");
     });
     }

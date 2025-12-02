@@ -3,9 +3,10 @@
 namespace App\Core\Infrastructure\Security;
 
 use App\Core\Contracts\Security\OtpServiceInterface;
+use App\Core\Infrastructure\Cache\RedisCacheService;
 use App\Modules\Authentication\Domain\ValueObjects\OtpCode;
-use Illuminate\Support\Facades\Redis;
 use App\Modules\Authentication\Domain\Exceptions\OtpExpiredException;
+use Illuminate\Support\Facades\Redis;
 
 class RedisOtpService implements OtpServiceInterface
 {
@@ -25,11 +26,11 @@ class RedisOtpService implements OtpServiceInterface
     {
         $otp = new OtpCode(random_int(100000, 999999));
 
-        Redis::setex(
-            $this->key($key),
-            $ttl,
-            $otp->value()
-        );
+        // Redis::setex(
+        //     $this->key($key),
+        //     $ttl,
+        //     $otp->value()
+        // );
 
         return $otp;
     }

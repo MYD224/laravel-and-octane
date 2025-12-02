@@ -5,12 +5,18 @@ namespace App\Modules\Authentication\Interface\Http\Controllers\Api\V1;
 use App\Core\Interface\Controllers\BaseController;
 use App\Modules\Authentication\Application\Services\UserService;
 use App\Modules\Authentication\Application\V1\Commands\GenerateOtpCommand;
+use App\Modules\Authentication\Application\V1\Commands\LogoutCommand;
 use App\Modules\Authentication\Application\V1\Commands\RegisterUserCommand;
 use App\Modules\Authentication\Application\V1\Commands\UpdateUserProfileCommand;
+use App\Modules\Authentication\Application\V1\Commands\VerifyOtpCommand;
 use App\Modules\Authentication\Application\V1\Handlers\GenerateOtpHandler;
+use App\Modules\Authentication\Application\V1\UseCases\GenerateOtpUseCase;
+use App\Modules\Authentication\Application\V1\UseCases\LogoutUseCase;
 use App\Modules\Authentication\Application\V1\UseCases\RegisterUserUseCase;
 use App\Modules\Authentication\Application\V1\UseCases\UpdateUserProfileUseCase;
+use App\Modules\Authentication\Application\V1\UseCases\VerifyOtpUseCase;
 use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
@@ -42,7 +48,7 @@ class AuthController extends BaseController
             return response()->json(['message' => 'User not found.'], 404);
         }
 
-        if (!$userData->phoneVerifiedAt ){
+        if (!$userData->phoneVerifiedAt) {
             return response()->json(['message' => 'Please verify your phone first.'], 403);
         }
 
@@ -51,7 +57,7 @@ class AuthController extends BaseController
 
         // Generate OTP
         // $otp = rand(100000, 999999);
-         $otp = app(GenerateOtpHandler::class)->handle(
+        $otp = app(GenerateOtpHandler::class)->handle(
             new GenerateOtpCommand($userData->id)
         );
         // $user->update([
@@ -103,25 +109,23 @@ class AuthController extends BaseController
             $userData = $useCase->execute($command);
 
             // Generate OTP
-             $otp = app(GenerateOtpHandler::class)->handle(
+            $otp = app(GenerateOtpUseCase::class)->execute(
                 new GenerateOtpCommand($userData->id)
             );
 
-             $updateCommande = new UpdateUserProfileCommand(
-                 id: $userData->id,
-                 otpCode: (string) $otp,
-                 otpExpiresAt: CarbonImmutable::now()->addMinutes($otp['ttl'])
-             );
+            $updateCommande = new UpdateUserProfileCommand(
+                id: $userData->id,
+                otpCode: (string) $otp['otp'],
+                otpExpiresAt: CarbonImmutable::now()->addMinutes($otp['ttl'])
+            );
 
-             $userData = $updateProfileUseCase->execute($updateCommande);
+            $userData = $updateProfileUseCase->execute($updateCommande);
 
-            // Store in DB or cache (Redis) with expiration
-            // Cache::put('phone_', $request->phone, now()->addMinutes(5));
 
             // Send via SMS gateway (or fake for dev)
             // SmsService::send($request->phone, "Your OTP is: {$otp}");
             // TODO: send OTP via SMS or WhatsApp (for now just log it)
-            info("OTP for {$userData->phone}: {$otp}");
+            info("OTP for {$userData->phone}: {$otp['otp']}");
 
 
 
@@ -130,7 +134,7 @@ class AuthController extends BaseController
                 'user' => $userData
             ]);
         } catch (\Throwable $th) {
-            throw $th;
+           return response()->json(["message" => $th->getMessage()], 400);
         }
     }
 
@@ -155,51 +159,52 @@ class AuthController extends BaseController
         $accessToken->revoke();
 
 
-
         return response()->json(['message' => 'Logged out successfully.']);
     }
 
 
 
 
-    public function verifyPhone(Request $request)
+    public function verifyPhone(UserService $userService, UpdateUserProfileUseCase $updateProfileUseCase)
     {
-        $request->validate([
-            'otp_code' => 'required|string',
+        $validated = request()->validate([
+            'user_id' => 'required|string',
+            'otp_code'     => 'required|string',
         ]);
 
 
-        $cachedPhone = Cache::get('phone_');
-        //get back to this later
-        $user = User::where('phone', $cachedPhone)->first();
+        try {
 
 
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+     
+            $result = app(VerifyOtpUseCase::class)->execute(
+                 new VerifyOtpCommand(
+                    userId: $validated['user_id'],
+                    otp: $validated['otp_code']
+                )
+            );
+
+                        info($validated);
+
+             $updateCommande = new UpdateUserProfileCommand(
+                id: $result ['user_id'],
+                phoneVerifiedAt: CarbonImmutable::now(),
+                otpCode: null,
+                otpExpiresAt: null
+            );
+
+            $userData = $updateProfileUseCase->execute($updateCommande);
+
+            $token = $userService->generatPassportToken($validated['user_id']); //
+
+            return response()->json([
+                'token_type' => 'Bearer',
+                'access_token' => $token,
+                'user' => $userData,
+            ]);
+        } catch (\Throwable $th) {
+           return response()->json(["message" => $th->getMessage()], 400);
         }
-
-        if ($user->otp_code !== $request->otp_code) {
-            return response()->json(['message' => 'Invalid OTP'], 400);
-        }
-
-        if ($user->otp_expires_at->isPast()) {
-            return response()->json(['message' => 'OTP expired'], 400);
-        }
-
-        $user->update([
-            'phone_verified_at' => now(),
-            'otp_code' => null,
-            'otp_expires_at' => null,
-        ]);
-
-
-        $token = $user->createToken('authToken')->accessToken;
-
-        return response()->json([
-            'token_type' => 'Bearer',
-            'access_token' => $token,
-            'user' => $user,
-        ]);
     }
 
     public function me(Request $request)
