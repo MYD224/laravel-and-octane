@@ -41,15 +41,15 @@ class RegisterUserUseCase
             hashedPassword: $passwordHashed
         );     
 
-      
-        
+
+
         return $this->cacheService->remember(
             key: "user:".$userEntity->getId().":session",
             ttl: 3600,
             callback: fn() => $this->userRepository->save($userEntity)
         );
 
-       
+
 
     }
 }

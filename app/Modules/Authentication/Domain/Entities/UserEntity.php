@@ -195,7 +195,7 @@ class UserEntity
         /**
          * Get the value of authProvider
          */ 
-        public function getAuthProvider()
+        public function getAuthProvider(): ?string
         {
                 return $this->authProvider;
         }
@@ -203,7 +203,7 @@ class UserEntity
         /**
          * Get the value of authProviderId
          */ 
-        public function getAuthProviderId()
+        public function getAuthProviderId(): ?string
         {
                 return $this->authProviderId;
         }

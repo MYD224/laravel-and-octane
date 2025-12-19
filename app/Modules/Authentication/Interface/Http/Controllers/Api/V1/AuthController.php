@@ -19,6 +19,7 @@ use App\Modules\Authentication\Application\V1\UseCases\LogoutUseCase;
 use App\Modules\Authentication\Application\V1\UseCases\RegisterUserUseCase;
 use App\Modules\Authentication\Application\V1\UseCases\UpdateUserProfileUseCase;
 use App\Modules\Authentication\Application\V1\UseCases\VerifyOtpUseCase;
+use App\Modules\Authentication\Application\V1\UseCases\LoginUser;
 use App\Modules\Authentication\Domain\Repositories\UserRepositoryInterface;
 use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
 use Carbon\Carbon;
@@ -28,8 +29,7 @@ use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Modules\Authentication\Domain\ValueObjects\Email;
 use App\Modules\Authentication\Domain\ValueObjects\Id;
-
-
+use App\Modules\Authentication\Domain\ValueObjects\PhoneNumber;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -43,7 +43,7 @@ class AuthController extends BaseController
     {}
 
 
-    public function login(Request $request, UserRepositoryInterface $userRepository)
+    public function login(Request $request, UserRepositoryInterface $userRepository, LoginUser $loginUseCase)
     {
 
         $validator = Validator::make($request->all(), [
@@ -71,13 +71,18 @@ class AuthController extends BaseController
         // }
 
         // Revoke old tokens (optional, to ensure one active session)
-        $userRepository->deleteTokens($userEntity->getPhone());
+        $userRepository->deleteTokens($userEntity->getPhoneNumber());
+
+        $isLoggedIn = $loginUseCase->execute($request->phone, $request->password);
 
         // Generate OTP
-        // $otp = rand(100000, 999999);
-        $otp = app(GenerateOtpHandler::class)->handle(
-            new GenerateOtpCommand($userEntity->getId())
-        );
+        // // $otp = rand(100000, 999999);
+        // $otp = app(GenerateOtpHandler::class)->handle(
+        //     new GenerateOtpCommand($userEntity->getId(), 30000)
+        // );
+            $otp = app(GenerateOtpUseCase::class)->execute(
+                new GenerateOtpCommand($userEntity->getId(), 30000)
+            );
         // $user->update([
         //     "otp_code" => $result['otp'],
         //     "otp_expires_at" => now()->addMinutes(10)
@@ -93,9 +98,9 @@ class AuthController extends BaseController
 
 
         return response()->json([
-            'message' => 'Account created successfully. Please verify your phone.',
+            'message' => 'user verified successfully. Please verify your phone.',
             'user' => UserData::fromEntity($userEntity),
-            'opt' => $otp,
+            'otp' => $otp,
         ]);
     }
 
@@ -271,7 +276,6 @@ class AuthController extends BaseController
             $id = $user->getId();
             $name = $user->getFullname();
             $email = $user->getEmail();
-            info(config('app.frontend_url'));
             // Rediriger vers le frontend avec le token
             $redirectUrl = sprintf(
                 '%s/auth/callback?token=%s&user=%s',
@@ -285,7 +289,6 @@ class AuthController extends BaseController
                     // 'avatar' => $user->avatar,
                 ]))
             );
-            info($redirectUrl);
 
             return redirect()->away($redirectUrl);
 

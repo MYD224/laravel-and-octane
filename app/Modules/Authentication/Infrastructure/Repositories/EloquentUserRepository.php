@@ -9,6 +9,7 @@ use App\Modules\Authentication\Domain\ValueObjects\Email;
 use App\Modules\Authentication\Domain\ValueObjects\Id;
 use App\Modules\Authentication\Domain\ValueObjects\PhoneNumber;
 use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User as ModelsUser;
+use Carbon\CarbonImmutable;
 
 class EloquentUserRepository implements UserRepositoryInterface
 {
@@ -18,7 +19,7 @@ class EloquentUserRepository implements UserRepositoryInterface
             ['id' => $user->getId()],
             [
                 'email' => $user->getEmail(),
-                'phone' => $user->getPhoneNumber() ? $user->getPhoneNumber() : null,
+                'phone' => $user->getPhoneNumber(),
                 'fullname' => $user->getFullname(),
                 'status' => $user->getStatus(),
                 'otp_expires_at' => $user->getOtpExpiresAt(),
@@ -41,9 +42,8 @@ class EloquentUserRepository implements UserRepositoryInterface
 
     public function deleteTokens(string $phone) {
         $model = ModelsUser::where('phone', $phone)->first();
-
-        $model->tokens()->delete();
-
+        if($model)
+            $model->tokens()->delete();
     }
 
     public function findById(string $id): ?UserEntity
@@ -96,13 +96,15 @@ class EloquentUserRepository implements UserRepositoryInterface
     }
     
     private function userInstance(ModelsUser $model): UserEntity {
+        info('formating user: '.$model->id.' with phone : '.$model->phone);
         $phone = $model->phone ? new PhoneNumber($model->phone) : null;
         $status = $model->status ?? UserStatus::ACTIVE->value;
+        $phoneVerifiedAt = $model->phone_verified_at ? CarbonImmutable::parse($model->phone_verified_at) : null;
         return UserEntity::register(
             id: new Id($model->id),
             fullname: $model->fullname,
             phone: $phone,
-            phoneVerifiedAt: $model->phone_verified_at,
+            phoneVerifiedAt: $phoneVerifiedAt,
             email: new Email($model->email),
             status: $status,
             hashedPassword: $model->password,

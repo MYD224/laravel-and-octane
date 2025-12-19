@@ -26,7 +26,7 @@ class GenerateOtpUseCase
             3600, 
             fn() => $this->userRepository->findById($command->userId)
         );
-
+        
         if (!$user) {
             throw new UserNotFoundException("User ID {$command->userId} not found.");
         }

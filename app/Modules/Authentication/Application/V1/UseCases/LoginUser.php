@@ -1,5 +1,7 @@
 <?php
-namespace App\Modules\Authentication\Domain\Entities;
+namespace App\Modules\Authentication\Application\V1\UseCases;
+
+use App\Modules\Authentication\Infrastructure\Services\AuthService;
 
 class LoginUser
 {

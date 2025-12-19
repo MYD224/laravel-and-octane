@@ -11,6 +11,7 @@ class AuthService
         }
 
         // Return Passport token
-        return auth()->user()->createToken('API Token')->accessToken;
+        // return auth()->user()->createToken('API Token')->accessToken;
+        return true;
     }
 }
