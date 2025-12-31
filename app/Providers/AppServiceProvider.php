@@ -11,6 +11,8 @@ use App\Core\Infrastructure\Security\RedisOtpService;
 use App\Infrastructure\Providers\BookingServiceProvider;
 use App\Modules\Authentication\Domain\Repositories\UserRepositoryInterface;
 use App\Modules\Authentication\Infrastructure\Repositories\EloquentUserRepository;
+use App\Modules\Navigation\Domain\Repositories\MenuItemRepositoryInterface;
+use App\Modules\Navigation\Infrastructure\Repositories\EloquentMenuItemRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,24 +27,21 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CacheServiceInterface::class, LaravelCacheService::class);
 
         $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
-        $this->app->bind(CacheServiceInterface::class, function () use($myapp) {
-            return new RedisCacheService(prefix: $myapp.':'); // configurable
+        $this->app->bind(CacheServiceInterface::class, function () use ($myapp) {
+            return new RedisCacheService(prefix: $myapp . ':'); // configurable
 
         });
 
-        $this->app->bind(OtpServiceInterface::class, function (){
+        $this->app->bind(OtpServiceInterface::class, function () {
             return new OtpService(
                 $this->app->make(CacheServiceInterface::class)
             );
-    });
+        });
+        $this->app->bind(MenuItemRepositoryInterface::class, EloquentMenuItemRepository::class);
     }
 
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
-    {
-        
-          
-    }
+    public function boot(): void {}
 }

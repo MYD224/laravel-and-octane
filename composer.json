@@ -17,7 +17,7 @@
         "nesbot/carbon": "^3.10",
         "nuwave/lighthouse": "^6.63",
         "spatie/laravel-data": "^4.17",
-        "spatie/laravel-permission": "^6.21",
+        "spatie/laravel-permission": "^6.24",
         "spatie/laravel-query-builder": "^6.3"
     },
     "require-dev": {
