@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_structures', function (Blueprint $table) {
+        Schema::create('languages', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->uuid('structure_id');
-            $table->string('functions', 45)->nullable();
+            $table->string('label', 45);
+            $table->string('code', 5)->nullable();
             $table->uuid('created_by_id');
             $table->uuid('updated_by_id');
 
@@ -23,9 +22,6 @@ return new class extends Migration
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
 
-            $table->unique(['user_id', 'structure_id']);
-            $table->fk('structure_id', 'structures')->cascadeOnDelete();
-            $table->fk('user_id', 'users')->cascadeOnDelete();
             $table->fk('created_by_id', 'users')->cascadeOnDelete();
             $table->fk('updated_by_id', 'users')->cascadeOnDelete();
         });
@@ -36,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_structures');
+        Schema::dropIfExists('languages');
     }
 };

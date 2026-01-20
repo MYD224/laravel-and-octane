@@ -13,21 +13,31 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('fullname');
-            $table->string('email')->nullable()->unique();
-            $table->string("phone")->nullable()->unique();
-            $table->string('role')->default('user'); 
-            // $table->string('username')->unique();
-            
-            $table->string('status')->default("active"); // active, suspended
-            //wallet balance
-            // $table->decimal('wallet_balance', 10, 2)->default(0.00);
-            
+            // $table->string('fullname');
+            $table->string('firstnames', 50)->nullable();
+            $table->string('lastname', 20)->nullable();
+            $table->enum('gender', ['Feminin', 'Masculin']);
+            $table->string('email', 255)->nullable()->unique();
+            $table->string('phone', 16)->nullable()->unique();
+            $table->string('photo', 45)->nullable();
+
+            $table->string('status_id');
+
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('phone_verified_at')->nullable();
             $table->string('password');
+            $table->uuid('locality_id')->nullable();
+            $table->uuid('language_id')->nullable();
+            $table->uuid('citoyen_id')->nullable();
+            $table->boolean('is_send_otp')->default(true);
+            $table->string('auth_provider')->nullable();
+            $table->string('provider_id')->nullable();
             $table->rememberToken();
-            $table->timestamps();
-            
+            $table->uuid('created_by_id')->nullable();
+            $table->uuid('updated_by_id')->nullable();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

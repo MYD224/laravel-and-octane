@@ -25,7 +25,13 @@ return new class extends Migration
             $table->bigIncrements('id'); // permission id
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
-            $table->timestamps();
+            $table->uuid('created_by_id');
+            $table->uuid('updated_by_id');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->softDeletes();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
 
             $table->unique(['name', 'guard_name']);
         });
@@ -34,16 +40,22 @@ return new class extends Migration
             // $table->engine('InnoDB');
             $table->bigIncrements('id'); // role id
             $table->uuid('structure_id')->nullable();
-            $table->uuid('group_id')->nullable();
+            $table->uuid('groupe_id')->nullable();
             if ($teams || config('permission.testing')) { // permission.testing is a fix for sqlite testing
                 $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
                 $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
             }
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
-            $table->timestamps();
-            $table->foreign('structure_id')->references('id')->on('structures')->cascadeOnDelete();
-            $table->foreign('group_id')->references('id')->on('groups')->cascadeOnDelete();
+            $table->uuid('created_by_id');
+            $table->uuid('updated_by_id');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->softDeletes();
+            $table->fk('structure_id', 'structures')->cascadeOnDelete();
+            $table->fk('groupe_id', 'groupes')->cascadeOnDelete();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
             if ($teams || config('permission.testing')) {
                 $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
             } else {
@@ -58,10 +70,15 @@ return new class extends Migration
             $table->uuid($columnNames['model_morph_key']);
             $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
 
-            $table->foreign($pivotPermission)
-                ->references('id') // permission id
-                ->on($tableNames['permissions'])
-                ->onDelete('cascade');
+            $table->uuid('created_by_id');
+            $table->uuid('updated_by_id');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->softDeletes();
+            $table->fk('created_by_id', 'users');
+            $table->fk('updated_by_id', 'users');
+
+            $table->fk($pivotPermission, $tableNames['permissions'])->cascadeOnDelete();
             if ($teams) {
                 $table->unsignedBigInteger($columnNames['team_foreign_key']);
                 $table->index($columnNames['team_foreign_key'], 'model_has_permissions_team_foreign_key_index');
@@ -85,10 +102,7 @@ return new class extends Migration
             $table->uuid($columnNames['model_morph_key']);
             $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_roles_model_id_model_type_index');
 
-            $table->foreign($pivotRole)
-                ->references('id') // role id
-                ->on($tableNames['roles'])
-                ->onDelete('cascade');
+            $table->fk($pivotRole, $tableNames['roles'])->cascadeOnDelete();
             if ($teams) {
                 $table->unsignedBigInteger($columnNames['team_foreign_key']);
                 $table->index($columnNames['team_foreign_key'], 'model_has_roles_team_foreign_key_index');
@@ -103,21 +117,30 @@ return new class extends Migration
                     'model_has_roles_role_model_type_primary'
                 );
             }
+            $table->uuid('created_by_id');
+            $table->uuid('updated_by_id');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->softDeletes();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
         });
 
         Schema::create($tableNames['role_has_permissions'], static function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
             $table->unsignedBigInteger($pivotPermission);
             $table->unsignedBigInteger($pivotRole);
 
-            $table->foreign($pivotPermission)
-                ->references('id') // permission id
-                ->on($tableNames['permissions'])
-                ->onDelete('cascade');
+            $table->uuid('created_by_id');
+            $table->uuid('updated_by_id');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->softDeletes();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
 
-            $table->foreign($pivotRole)
-                ->references('id') // role id
-                ->on($tableNames['roles'])
-                ->onDelete('cascade');
+            $table->fk($pivotPermission, $tableNames['permissions'])->cascadeOnDelete();
+
+            $table->fk($pivotRole, $tableNames['roles'])->cascadeOnDelete();
 
             $table->primary([$pivotPermission, $pivotRole], 'role_has_permissions_permission_id_role_id_primary');
         });

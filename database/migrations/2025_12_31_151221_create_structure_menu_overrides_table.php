@@ -23,16 +23,17 @@ return new class extends Migration
             $table->unique(['structure_id', 'menu_item_id']);
 
             $table->uuid('created_by_id');
-            $table->uuid('last_updated_by_id')->nullable();
+            $table->uuid('updated_by_id');
 
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
 
 
-            $table->foreign('structure_id')->references('id')->on('structures')->cascadeOnDelete();
-            $table->foreign('menu_item_id')->references('id')->on('menu_items')->cascadeOnDelete();
-            $table->foreign('created_by_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('last_updated_by_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->fk('structure_id', 'structures')->cascadeOnDelete();
+            $table->fk('menu_item_id', 'menu_items')->cascadeOnDelete();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
         });
     }
 

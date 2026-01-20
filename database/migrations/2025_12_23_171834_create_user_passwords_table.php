@@ -18,15 +18,15 @@ return new class extends Migration
             $table->string('type'); //a mettre a jour pour prendre un type enum
             $table->string('password', 255);
             $table->date('expired_at');
-            $table->string('status', 10); // a mettre a jour plus tard en se referant aux status deja existants
             $table->uuid('created_by_id');
-            $table->uuid('last_updated_by_id')->nullable();
+            $table->uuid('updated_by_id');
 
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
 
-            $table->foreign('created_by_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('last_updated_by_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
         });
     }
 

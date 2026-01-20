@@ -15,16 +15,16 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('label', 45);
             $table->string('code', 10);
-            $table->string('status', 10); // a mettre a jour plus tard en se referant aux status deja existants
 
             $table->uuid('created_by_id');
-            $table->uuid('last_updated_by_id')->nullable();
+            $table->uuid('updated_by_id');
 
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
 
-            $table->foreign('created_by_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('last_updated_by_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
         });
     }
 

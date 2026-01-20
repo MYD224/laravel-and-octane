@@ -15,17 +15,17 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('user_id');
             $table->uuid('token_id');
-            $table->string('status', 10); // a mettre a jour plus tard en se referant aux status deja existants
             $table->uuid('created_by_id');
-            $table->uuid('last_updated_by_id')->nullable();
+            $table->uuid('updated_by_id');
 
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
 
-            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('created_by_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('last_updated_by_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('token_id')->references('id')->on('token_connexions')->cascadeOnDelete();
+            $table->fk('user_id', 'users')->cascadeOnDelete();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
+            $table->fk('token_id', 'token_connexions')->cascadeOnDelete();
         });
     }
 

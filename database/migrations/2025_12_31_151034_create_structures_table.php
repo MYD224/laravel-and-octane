@@ -13,16 +13,31 @@ return new class extends Migration
     {
         Schema::create('structures', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('name');
+            $table->string('name', 255);
+            $table->string('email', 50)->nullable();
+            $table->string('main_phone', 16)->nullable();
+            $table->string('secondary_phone', 16)->nullable();
+            $table->string('address')->nullable();
+            $table->string('website', 50)->nullable();
+            $table->uuid('status_id');
+            $table->uuid('type_id'); // mairie, syndicat, prestataire, autre
+            $table->string('logo', 70)->nullable();
             $table->boolean('is_owner')->default(false);
+            $table->double('latitude')->nullable();
+            $table->double('longitude')->nullable();
+            $table->uuid('prefecture_id')->nullable();
             $table->uuid('created_by_id');
-            $table->uuid('last_updated_by_id')->nullable();
+            $table->uuid('updated_by_id');
 
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
 
-            $table->foreign('created_by_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('last_updated_by_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->fk('type_id', 'types')->cascadeOnDelete();
+            $table->fk('status_id', 'statuses')->cascadeOnDelete();
+            $table->fk('created_by_id', 'users')->cascadeOnDelete();
+            $table->fk('updated_by_id', 'users')->cascadeOnDelete();
+            $table->fk('prefecture_id', 'prefectures')->cascadeOnDelete();
         });
     }
 
