@@ -13,6 +13,7 @@ use App\Modules\Authentication\Domain\Repositories\UserRepositoryInterface;
 use App\Modules\Authentication\Infrastructure\Repositories\EloquentUserRepository;
 use App\Modules\Navigation\Domain\Repositories\MenuItemRepositoryInterface;
 use App\Modules\Navigation\Infrastructure\Repositories\EloquentMenuItemRepository;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -43,5 +44,19 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void {}
+    public function boot(): void
+    {
+        Blueprint::macro('fk', function (
+            string $column,
+            string $table,
+            string $ref = 'id',
+            ?string $name = null
+        ) {
+            $name ??= "fk_{$this->getTable()}_{$column}";
+
+            return $this->foreign($column, $name)
+                ->references($ref)
+                ->on($table);
+        });
+    }
 }
