@@ -2,6 +2,7 @@
 
 namespace App\Modules\Authentication\Interface\Http\Controllers\Api\V1;
 
+use App\Modules\Navigation\Application\V1\UseCases\GetNavigationTreeUseCase;
 use App\Core\Application\UseCases\GenerateTokenUseCase;
 use App\Core\Interface\Controllers\BaseController;
 use App\Modules\Authentication\Application\Services\HashingService;
@@ -39,8 +40,7 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends BaseController
 {
-    public function __construct(private readonly UserRepositoryInterface $userRepository, private readonly HashingService $hashingService)
-    {}
+    public function __construct(private readonly UserRepositoryInterface $userRepository, private readonly HashingService $hashingService) {}
 
 
     public function login(Request $request, UserRepositoryInterface $userRepository, LoginUser $loginUseCase)
@@ -65,7 +65,7 @@ class AuthController extends BaseController
             return response()->json(['message' => 'Please verify your phone first.'], 403);
         }
 
-         // Check user status
+        // Check user status
         // if ($userEntity->getStatus() !== UserStatus::ACTIVE) {
         //     throw new InvalidStatusException("User account is not active.");
         // }
@@ -80,9 +80,9 @@ class AuthController extends BaseController
         // $otp = app(GenerateOtpHandler::class)->handle(
         //     new GenerateOtpCommand($userEntity->getId(), 30000)
         // );
-            $otp = app(GenerateOtpUseCase::class)->execute(
-                new GenerateOtpCommand($userEntity->getId(), 30000)
-            );
+        $otp = app(GenerateOtpUseCase::class)->execute(
+            new GenerateOtpCommand($userEntity->getId(), 30000)
+        );
         // $user->update([
         //     "otp_code" => $result['otp'],
         //     "otp_expires_at" => now()->addMinutes(10)
@@ -144,7 +144,7 @@ class AuthController extends BaseController
             // SmsService::send($request->phone, "Your OTP is: {$otp}");
             // TODO: send OTP via SMS or WhatsApp (for now just log it)
             info("OTP for {$userEntity->getPhone()}: {$otp['otp']}");
-           
+
 
 
             return response()->json([
@@ -152,7 +152,7 @@ class AuthController extends BaseController
                 'user' => UserData::fromEntity($userEntity),
             ]);
         } catch (\Throwable $th) {
-           return response()->json(["message" => $th->getMessage()], 400);
+            return response()->json(["message" => $th->getMessage()], 400);
         }
     }
 
@@ -183,8 +183,11 @@ class AuthController extends BaseController
 
 
 
-    public function verifyPhone(UpdateUserProfileUseCase $updateProfileUseCase, GenerateTokenUseCase $generateTokenUseCase)
-    {
+    public function verifyPhone(
+        UpdateUserProfileUseCase $updateProfileUseCase,
+        GenerateTokenUseCase $generateTokenUseCase,
+        GetNavigationTreeUseCase $getNavigationTreeUseCase
+    ) {
         $validated = request()->validate([
             'user_id' => 'required|string',
             'otp_code'     => 'required|string',
@@ -194,31 +197,32 @@ class AuthController extends BaseController
         try {
 
 
-     
+
             $result = app(VerifyOtpUseCase::class)->execute(
-                 new VerifyOtpCommand(
+                new VerifyOtpCommand(
                     userId: $validated['user_id'],
                     otp: $validated['otp_code']
                 )
             );
 
-                        info($validated);
-
-             $updateCommande = new UpdateUserProfileCommand(
-                id: $result ['user_id'],
+            $updateCommande = new UpdateUserProfileCommand(
+                id: $result['user_id'],
                 phoneVerifiedAt: CarbonImmutable::now(),
             );
 
             $userData = $updateProfileUseCase->execute($updateCommande);
             $token = $generateTokenUseCase->execute($validated['user_id']); //
+            //get user permissions
+            $userMenus = $getNavigationTreeUseCase->execute(null, $validated['user_id']);
 
             return response()->json([
                 'token_type' => 'Bearer',
                 'access_token' => $token,
                 'user' => $userData,
+                'user_menus' => $userMenus,
             ]);
         } catch (\Throwable $th) {
-           return response()->json(["message" => $th->getMessage()], 400);
+            return response()->json(["message" => $th->getMessage()], 400);
         }
     }
 
@@ -291,7 +295,6 @@ class AuthController extends BaseController
             );
 
             return redirect()->away($redirectUrl);
-
         } catch (\Exception $e) {
             // En cas d'erreur, rediriger vers le frontend avec l'erreur
             $errorUrl = sprintf(
@@ -321,7 +324,13 @@ class AuthController extends BaseController
         if ($existingUser) {
             // Lier le compte existant au provider social
             $user = $this->userRepository->updateUserAfterSocialRegistration(
-                $existingUser->getId(), $provider, $socialUser->getId(), $existingUser->getEmail(), $existingUser->getFullname(), $existingUser->getHashedPassword(), now()
+                $existingUser->getId(),
+                $provider,
+                $socialUser->getId(),
+                $existingUser->getEmail(),
+                $existingUser->getFullname(),
+                $existingUser->getHashedPassword(),
+                now()
             );
 
             return $user;
@@ -329,8 +338,14 @@ class AuthController extends BaseController
         $hashedPassword = $this->hashingService->hash(Str::random(24));
         // Créer un nouvel utilisateur
         $user = $this->userRepository->updateUserAfterSocialRegistration(
-                Id::generate()->value(), $provider, $socialUser->getId(), $socialUser->getEmail(), $socialUser->getName(), $hashedPassword, now() 
-            );
+            Id::generate()->value(),
+            $provider,
+            $socialUser->getId(),
+            $socialUser->getEmail(),
+            $socialUser->getName(),
+            $hashedPassword,
+            now()
+        );
         return $user;
     }
 

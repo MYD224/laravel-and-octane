@@ -34,15 +34,16 @@ class EloquentUserRepository implements UserRepositoryInterface
         return $this->userInstance($user);
     }
 
-    public function generatPassportToken(string $id): string {
+    public function generatPassportToken(string $id): string
+    {
         $user = ModelsUser::find($id);
         return $user->createToken('authToken')->accessToken;
-
     }
 
-    public function deleteTokens(string $phone) {
+    public function deleteTokens(string $phone)
+    {
         $model = ModelsUser::where('phone', $phone)->first();
-        if($model)
+        if ($model)
             $model->tokens()->delete();
     }
 
@@ -53,30 +54,38 @@ class EloquentUserRepository implements UserRepositoryInterface
 
         return $this->userInstance($model);
     }
-    
+
+    public function findUserById(string $id, array $relations = []): ?ModelsUser
+    {
+        $model = ModelsUser::with($relations)->find($id);
+        if (!$model) return null;
+
+        return $model;
+    }
+
     public function findByPhone(string $phone): ?UserEntity
     {
         $model = ModelsUser::where('phone', $phone)->first();
         if (!$model) return null;
-        
+
         return $this->userInstance($model);
     }
 
     public function findByEmail(string $email): ?UserEntity
     {
-        $model =  ModelsUser::where('email', $email)->first();  
-         if (!$model) return null;
-        
+        $model =  ModelsUser::where('email', $email)->first();
+        if (!$model) return null;
+
         return $this->userInstance($model);
     }
-    
+
     public function findByAuthProviderAndProviderId(string $authProvider, string $providerId): ?UserEntity
     {
         $model = ModelsUser::where('auth_provider', $authProvider)
             ->where('provider_id', $providerId)
             ->first();
-         if (!$model) return null;
-        
+        if (!$model) return null;
+
         return $this->userInstance($model);
     }
 
@@ -91,12 +100,14 @@ class EloquentUserRepository implements UserRepositoryInterface
                 'password' => $password,
                 'auth_provider' => $authProvider,
                 'provider_id' => $providerId,
-            ]);
+            ]
+        );
         return $this->userInstance($user);
     }
-    
-    private function userInstance(ModelsUser $model): UserEntity {
-        info('formating user: '.$model->id.' with phone : '.$model->phone);
+
+    private function userInstance(ModelsUser $model): UserEntity
+    {
+        info('formating user: ' . $model->id . ' with phone : ' . $model->phone);
         $phone = $model->phone ? new PhoneNumber($model->phone) : null;
         $status = $model->status ?? UserStatus::ACTIVE->value;
         $phoneVerifiedAt = $model->phone_verified_at ? CarbonImmutable::parse($model->phone_verified_at) : null;

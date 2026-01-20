@@ -17,7 +17,7 @@ class UserEntity
         private string $fullname,
         private ?PhoneNumber $phone,
         private string $hashedPassword,
-        private UserStatus | string $status = UserStatus::ACTIVE->value,
+        private string $status,
         private ?CarbonImmutable $phoneVerifiedAt = null,
         private ?CarbonImmutable $emailVerifiedAt = null,
         private ?string $authProvider = null,
@@ -29,24 +29,32 @@ class UserEntity
 
 
     public static function register(
-        Id $id, string $fullname,   CarbonImmutable | null $phoneVerifiedAt, Email $email, string|UserStatus $status, string $hashedPassword, ?PhoneNumber $phone = null,
-        ?CarbonImmutable $emailVerifiedAt = null, ?string $authProvider = null, ?string $authProviderId = null
-    ): self
+        Id $id,
+        string $fullname,
+        CarbonImmutable | null $phoneVerifiedAt,
+        Email $email,
+        string $status,
+        string $hashedPassword,
+        ?PhoneNumber $phone = null,
+        ?CarbonImmutable $emailVerifiedAt = null,
+        ?string $authProvider = null,
+        ?string $authProviderId = null
+    ): self {
+        return new self($id, $email, $fullname, $phone, $hashedPassword, $status, $phoneVerifiedAt, $emailVerifiedAt, $authProvider, $authProviderId);
+    }
+
+    public function activate(): void
     {
-        return new self($id, $email, $fullname, $phone,$hashedPassword, $status ,$phoneVerifiedAt, $emailVerifiedAt, $authProvider, $authProviderId);
+        // $this->status = UserStatus::ACTIVE;
     }
 
-    public function activate(): void {
-        $this->status = UserStatus::ACTIVE;
-    }
 
-   
 
     public function update(
         ?Email $email = null,
         ?string $fullname = null,
         ?PhoneNumber $phone = null,
-        ?UserStatus $status = null,
+        ?string $status = null,
         ?string $hashedPassword = null,
         ?CarbonImmutable $otpExpiresAt = null,
         ?CarbonImmutable $phoneVerifiedAt = null,
@@ -88,10 +96,10 @@ class UserEntity
         if ($emailVerifiedAt !== null) {
             $this->emailVerifiedAt = $emailVerifiedAt;
         }
-        if($authProvider !== null){
+        if ($authProvider !== null) {
             $this->authProvider = $authProvider;
         }
-        if($authProviderId !== null){
+        if ($authProviderId !== null) {
             $this->authProviderId = $authProviderId;
         }
 
@@ -99,14 +107,15 @@ class UserEntity
     }
 
 
-    
 
 
 
-    public function getPhoneVerifiedAt() {
+
+    public function getPhoneVerifiedAt()
+    {
         return $this->phoneVerifiedAt;
     }
-    
+
     public function eguals(Email $email): bool
     {
         return $this->getEmail() == $email->value();
@@ -149,12 +158,12 @@ class UserEntity
         return $this->otpExpiresAt;
     }
 
-    public function getStatus(): UserStatus
+    public function getStatus(): string
     {
         return $this->status;
     }
 
-     public function getCreatedAt(): CarbonImmutable
+    public function getCreatedAt(): CarbonImmutable
     {
         return $this->createdAt;
     }
@@ -164,47 +173,47 @@ class UserEntity
         return $this->updatedAt;
     }
 
-        /**
-         * Set the value of phoneVerifiedAt
-         *
-         * @return  self
-         */ 
-        public function setPhoneVerifiedAt($phoneVerifiedAt)
-        {
-            $this->phoneVerifiedAt = $phoneVerifiedAt;
+    /**
+     * Set the value of phoneVerifiedAt
+     *
+     * @return  self
+     */
+    public function setPhoneVerifiedAt($phoneVerifiedAt)
+    {
+        $this->phoneVerifiedAt = $phoneVerifiedAt;
 
-            return $this;
-        }
+        return $this;
+    }
 
-        /**
-         * Get the value of phone
-         */ 
-        public function getPhone()
-        {
-            return $this->phone->value() ? $this->phone->value() : null;
-        }
+    /**
+     * Get the value of phone
+     */
+    public function getPhone()
+    {
+        return $this->phone->value() ? $this->phone->value() : null;
+    }
 
-        /**
-         * Get the value of emailVerifiedAt
-         */ 
-        public function getEmailVerifiedAt()
-        {
-                return $this->emailVerifiedAt;
-        }
+    /**
+     * Get the value of emailVerifiedAt
+     */
+    public function getEmailVerifiedAt()
+    {
+        return $this->emailVerifiedAt;
+    }
 
-        /**
-         * Get the value of authProvider
-         */ 
-        public function getAuthProvider(): ?string
-        {
-                return $this->authProvider;
-        }
+    /**
+     * Get the value of authProvider
+     */
+    public function getAuthProvider(): ?string
+    {
+        return $this->authProvider;
+    }
 
-        /**
-         * Get the value of authProviderId
-         */ 
-        public function getAuthProviderId(): ?string
-        {
-                return $this->authProviderId;
-        }
+    /**
+     * Get the value of authProviderId
+     */
+    public function getAuthProviderId(): ?string
+    {
+        return $this->authProviderId;
+    }
 }

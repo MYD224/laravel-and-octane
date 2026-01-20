@@ -4,16 +4,19 @@ namespace App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Structure;
 use App\Modules\Authentication\Domain\Enums\UserStatus;
+use App\Modules\Authentication\Domain\ValueObjects\Id;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -22,7 +25,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'id',
-        'fullname',
+        // 'fullname',
+        'firstnames',
+        'lastname',
+        'gender',
         'email',
         'phone',
         'role',
@@ -56,7 +62,7 @@ class User extends Authenticatable
         'otp_expires_at' => 'datetime',
         'password' => 'hashed',
         'id' => 'string',
-        'status' => UserStatus::class,
+        'status' => 'string',
     ];
 
 
@@ -68,11 +74,11 @@ class User extends Authenticatable
 
 
 
-   public function findForPassport($username)
+    public function findForPassport($username)
     {
         return $this->where('phone', $username)
-                    ->orWhere('email', $username)
-                    ->first();
+            ->orWhere('email', $username)
+            ->first();
     }
 
     protected static function boot()
@@ -85,5 +91,14 @@ class User extends Authenticatable
                 $model->{$model->getKeyName()} = (string) \Illuminate\Support\Str::uuid();
             }
         });
+    }
+
+    // public function structure()
+    // {
+    //     return $this->belongsTo(Structure::class, 'structure_id');
+    // }
+    public function structures()
+    {
+        return $this->belongsToMany(Structure::class, 'user_structures', 'user_id', 'structure_id');
     }
 }

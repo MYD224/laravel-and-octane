@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Modules\Authentication\Application\V1\UseCases;
 
 use App\Core\Contracts\Cache\CacheServiceInterface;
@@ -9,13 +10,11 @@ use App\Modules\Authentication\Application\V1\Handlers\VerifyOtpHandler;
 use App\Modules\Authentication\Domain\Exceptions\InvalidOtpException;
 use App\Modules\Authentication\Domain\Exceptions\OtpExpiredException;
 use App\Modules\Authentication\Domain\Repositories\UserRepositoryInterface;
-use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
 use App\Modules\User\Domain\Exceptions\UserNotFoundException;
-use Illuminate\Support\Facades\Log;
 
 class VerifyOtpUseCase
 {
-     public function __construct(
+    public function __construct(
         // private VerifyOtpHandler $handler
         private readonly UserRepositoryInterface $userRepository,
         private readonly CacheServiceInterface $cache,
@@ -27,7 +26,7 @@ class VerifyOtpUseCase
 
         // $userEntity = $this->userRepository->findById($command->userId);
         $userEntity = $this->cache->remember(
-            key: "user:".$command->userId.":session",
+            key: "user:" . $command->userId . ":session",
             ttl: 3600,
             callback: fn() => $this->userRepository->findById($command->userId)
         );
@@ -42,7 +41,6 @@ class VerifyOtpUseCase
                 key: "user:{$userEntity->getId()}:otp",
                 code: $command->otp
             );
-            Log::info("OTP validation result: " . ($isValid ? 'valid' : 'invalid'));
         } catch (OtpExpiredException $e) {
             throw $e; // safe to bubble up
         }
