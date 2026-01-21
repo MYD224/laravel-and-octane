@@ -3,10 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Database\Seeders\UserStatusSeeder as SeedersUserStatusSeeder;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use UserStatusSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,9 +20,10 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call([
-            SeedersUserStatusSeeder::class,
-            MenuItemsSeeder::class,
+            StatusSeeder::class,
             UsersSeeder::class,
+            TypeSeeder::class,
+            MenuItemsSeeder::class,
         ]);
     }
 }

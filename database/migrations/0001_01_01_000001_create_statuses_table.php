@@ -16,6 +16,7 @@ return new class extends Migration
             $table->enum('category', [
                 'Utilisateur',
                 'Licence',
+                'Structure',
                 'Emplacement',
                 'Redevable',
                 'Motard',
@@ -26,8 +27,8 @@ return new class extends Migration
             ]);
             $table->string('label', 45);
             $table->string('code', 10);
-            $table->string('created_by_id');
-            $table->string('updated_by_id');
+            $table->string('created_by_id')->nullable();
+            $table->string('updated_by_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();

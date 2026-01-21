@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
     'fronted_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+    'system_user_id' => env('SYSTEM_USER_ID'),
+
 
     /*
     |--------------------------------------------------------------------------
