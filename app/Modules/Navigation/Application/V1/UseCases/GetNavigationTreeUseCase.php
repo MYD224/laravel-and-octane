@@ -7,7 +7,6 @@ use App\Modules\Authentication\Domain\Repositories\UserRepositoryInterface;
 use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
 use App\Modules\Navigation\Domain\Repositories\MenuItemRepositoryInterface;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
 
 class GetNavigationTreeUseCase
 {
@@ -37,7 +36,7 @@ class GetNavigationTreeUseCase
     private function buildTree($items, $parentId, $structureId, $user, $locale): array
     {
         return $items->where('parent_id', $parentId)
-            ->filter(fn($item) => $user->hasPermissionTo("{$item->name}.view", "api")) // Security Gate
+            ->filter(fn($item) => $user->hasPermissionTo("{$item->code}.view", "api")) // Security Gate
             ->filter(function ($item) {
                 // Check if the tenant explicitly hid this item
                 $override = $item->overrides->first();

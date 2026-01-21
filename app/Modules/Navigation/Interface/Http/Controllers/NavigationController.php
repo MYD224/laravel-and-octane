@@ -12,7 +12,7 @@ class NavigationController
 {
     public function __construct(
         private GetNavigationTreeUseCase $useCase,
-        
+
         private readonly CacheServiceInterface $cache,
     ) {}
 

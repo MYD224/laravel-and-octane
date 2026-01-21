@@ -12,6 +12,8 @@ class MenuItem extends Model
     use SoftDeletes, HasUuids;
     public $incrementing = false;
 
+    protected $guarded = [];
+
     protected $casts = ['default_label' => 'array'];
 
     public function overrides()
@@ -22,7 +24,7 @@ class MenuItem extends Model
     // Business Logic: Determine if an action is permitted for a user
     public function isActionAllowed($user, string $action): bool
     {
-        return $user->can("{$this->name}.{$action}");
+        return $user->can("{$this->code}.{$action}");
     }
 
     // Business Logic: Resolve translated label

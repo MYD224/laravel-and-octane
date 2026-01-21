@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class StructureMenuOverride extends Model
 {
     use SoftDeletes;
+
+    public $incrementing = false;
+
+    protected $guarded = [];
 }
