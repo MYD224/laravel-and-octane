@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class Role extends SpatieRole
 {
-    protected $fillable = ['name', 'guard_name', 'structure_id', 'group_id'];
+    protected $fillable = ['name', 'guard_name', 'structure_id', 'group_id', 'created_by_id', 'updated_by_id'];
 
     protected static function booted()
     {
@@ -18,6 +18,7 @@ class Role extends SpatieRole
         $userId = auth()->id() ?? config('app.system_user_id');
         static::creating(function ($model) use ($userId) {
             $model->created_by_id = $userId;
+            $model->updated_by_id = $userId;
         });
 
         static::updating(function ($model) use ($userId) {

@@ -11,7 +11,7 @@ class Permission extends SpatiePermission
         $userId = auth()->id() ?? config('app.system_user_id');
         static::creating(function ($model) use ($userId) {
             $model->created_by_id = $userId;
-            $model->updated_by_id = auth()->id();
+            $model->updated_by_id = $userId;
         });
 
         static::updating(function ($model) use ($userId) {

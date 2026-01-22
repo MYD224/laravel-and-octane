@@ -70,8 +70,8 @@ return new class extends Migration
             $table->uuid($columnNames['model_morph_key']);
             $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
 
-            $table->uuid('created_by_id');
-            $table->uuid('updated_by_id');
+            $table->uuid('created_by_id')->nullable();
+            $table->uuid('updated_by_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
@@ -117,8 +117,8 @@ return new class extends Migration
                     'model_has_roles_role_model_type_primary'
                 );
             }
-            $table->uuid('created_by_id');
-            $table->uuid('updated_by_id');
+            $table->uuid('created_by_id')->nullable();
+            $table->uuid('updated_by_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
@@ -130,8 +130,8 @@ return new class extends Migration
             $table->unsignedBigInteger($pivotPermission);
             $table->unsignedBigInteger($pivotRole);
 
-            $table->uuid('created_by_id');
-            $table->uuid('updated_by_id');
+            $table->uuid('created_by_id')->nullable();
+            $table->uuid('updated_by_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();

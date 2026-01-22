@@ -8,12 +8,14 @@ use Illuminate\Support\Facades\Auth;
 class ModelHasRole extends MorphPivot
 {
 
+    protected $guarded = [];
+    protected $table = 'model_has_roles';
+
     protected static function booted()
     {
         static::creating(function ($pivot) {
-            $userId = Auth::id() ?? config('app.system_user_id');
-            $pivot->created_by_id = $userId;
-            $pivot->updated_by_id = $userId;
+            $pivot->created_by_id = Auth::id() ?? config('app.system_user_id');
+            $pivot->updated_by_id = Auth::id() ?? config('app.system_user_id');
         });
 
         static::updating(function ($pivot) {

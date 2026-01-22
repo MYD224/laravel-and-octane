@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_connexions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('user_id');
-            $table->uuid('token_id');
+            $table->uuid('token_id')->nullable();
             $table->uuid('created_by_id');
             $table->uuid('updated_by_id');
 
