@@ -99,7 +99,7 @@ class AuthController extends BaseController
             $token = $generateTokenUseCase->execute($userEntity->getId()); //
             //get user permissions and menus
             $userMenus = $getNavigationTreeUseCase->execute(null, $userEntity->getId());
-
+            $userRepository->saveConnexion($userEntity->getId(), null);
             return response()->json([
                 'token_type' => 'Bearer',
                 'access_token' => $token,
@@ -197,7 +197,8 @@ class AuthController extends BaseController
     public function verifyPhone(
         UpdateUserProfileUseCase $updateProfileUseCase,
         GenerateTokenUseCase $generateTokenUseCase,
-        GetNavigationTreeUseCase $getNavigationTreeUseCase
+        GetNavigationTreeUseCase $getNavigationTreeUseCase,
+        UserRepositoryInterface $userRepository
     ) {
         $validated = request()->validate([
             'user_id' => 'required|string',
@@ -224,7 +225,7 @@ class AuthController extends BaseController
             $token = $generateTokenUseCase->execute($validated['user_id']); //
             //get user permissions and menus
             $userMenus = $getNavigationTreeUseCase->execute(null, $validated['user_id']);
-
+            $userRepository->saveConnexion($validated['user_id'], $validated['otp_code']);
             return response()->json([
                 'token_type' => 'Bearer',
                 'access_token' => $token,

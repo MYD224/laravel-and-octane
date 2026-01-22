@@ -4,6 +4,8 @@ namespace App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\ModelHasRole;
+use App\Models\Role;
 use App\Models\Status;
 use App\Models\Structure;
 use App\Modules\Authentication\Domain\Enums\UserStatus;
@@ -92,10 +94,6 @@ class User extends Authenticatable
         });
     }
 
-    // public function structure()
-    // {
-    //     return $this->belongsTo(Structure::class, 'structure_id');
-    // }
     public function structures()
     {
         return $this->belongsToMany(Structure::class, 'user_structures', 'user_id', 'structure_id');
@@ -104,5 +102,15 @@ class User extends Authenticatable
     public function status()
     {
         return $this->belongsTo(Status::class, 'status_id', 'id');
+    }
+
+
+
+    //refering to laravel spatie roles, it also heplps to add created_by and updated_by
+    public function roles()
+    {
+        return $this->morphToMany(Role::class, 'model', 'model_has_roles')
+            ->using(ModelHasRole::class)
+            ->withTimestamps();
     }
 }

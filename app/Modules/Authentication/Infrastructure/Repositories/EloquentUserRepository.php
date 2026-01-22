@@ -9,7 +9,9 @@ use App\Modules\Authentication\Domain\Repositories\UserRepositoryInterface;
 use App\Modules\Authentication\Domain\ValueObjects\Email;
 use App\Modules\Authentication\Domain\ValueObjects\Id;
 use App\Modules\Authentication\Domain\ValueObjects\PhoneNumber;
+use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\TokenConnexion;
 use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User as ModelsUser;
+use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\UserConnexion;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
@@ -114,12 +116,30 @@ class EloquentUserRepository implements UserRepositoryInterface
         return $this->userInstance($user);
     }
 
+    public function saveConnexion(string $userId, ?string $otp_code): void
+    {
+        $tokenId = null;
+        if (isset($otp_code)) {
+            $tokenConnexion = TokenConnexion::create([
+                'user_id' => $userId,
+                'code' => $otp_code,
+                'created_by_id' => $userId,
+                'updated_by_id' => $userId
+            ]);
+
+            $tokenId = $tokenConnexion->id;
+        }
+
+        UserConnexion::create([
+            'user_id' => $userId,
+            'token_id' => $tokenId,
+            'created_by_id' => $userId,
+            'updated_by_id' => $userId
+        ]);
+    }
+
     private function userInstance(ModelsUser $model): UserEntity
     {
-        // info('formating user: ' . $model->id . ' with phone : ' . $model->phone);
-        Log::warning("user found {$model}");
-
-        // Log::warning("user2 found {$el}");
         $status = $model->status?->code;
         $phone = $model->phone ? new PhoneNumber($model->phone) : null;
         // $status = $model->status ?? UserStatus::ACTIVE->value;

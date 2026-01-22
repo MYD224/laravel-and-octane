@@ -5,6 +5,8 @@ namespace App\Modules\Authentication\Domain\Repositories;
 use App\Modules\Authentication\Application\V1\Data\UserData;
 use App\Modules\Authentication\Domain\Entities\UserEntity;
 use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
+
+use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\UserConnexion;
 use Carbon\CarbonImmutable;
 
 interface UserRepositoryInterface
@@ -26,4 +28,5 @@ interface UserRepositoryInterface
         ?string $password,
         ?string $emailValidatedAt = null
     ): UserEntity;
+    public function saveConnexion(string $userId, ?string $otp_code): void;
 }
