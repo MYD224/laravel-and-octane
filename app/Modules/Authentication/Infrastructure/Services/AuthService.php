@@ -7,7 +7,7 @@ class AuthService
     public function attemptLogin(string $phone, string $password): string
     {
         if (!auth()->attempt(['phone' => $phone, 'password' => $password])) {
-            throw new \Exception('Invalid credentials');
+            return false;
         }
 
         // Return Passport token

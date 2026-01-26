@@ -20,6 +20,7 @@ class UserData extends Data
         public string $phone,
         public string $email,
         public string $status,
+        public bool $isSendOtp,
         public CarbonImmutable | null $phoneVerifiedAt,
         public CarbonImmutable | null $emailVerifiedAt,
 
@@ -37,6 +38,7 @@ class UserData extends Data
             phone: $userEntity->getPhoneNumber(),
             email: $userEntity->getEmail(),
             status: $userEntity->getStatus(),
+            isSendOtp: $userEntity->getIsSendOtp(),
             phoneVerifiedAt: $userEntity->getPhoneVerifiedAt(),
             emailVerifiedAt: $userEntity->getEmailVerifiedAt()
         );

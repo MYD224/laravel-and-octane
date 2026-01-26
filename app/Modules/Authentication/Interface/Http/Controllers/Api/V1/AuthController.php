@@ -78,35 +78,43 @@ class AuthController extends BaseController
         // Revoke old tokens (optional, to ensure one active session)
         $userRepository->deleteTokens($userEntity->getPhoneNumber());
 
-        $loginUseCase->execute($request->phone, $request->password);
-
+        $isLoggedIn = $loginUseCase->execute($request->phone, $request->password);
+        $otp = null;
+        $message = '';
+        $userMenus = [];
+        if (!$isLoggedIn) {
+            return response()->json([
+                'message' => 'Invalid credentials',
+                'access_token' => null,
+                'user' => null,
+                'user_menus' => [],
+                'otp_expires_at' => null,
+            ], 422);
+        }
         if ($userEntity->getIsSendOtp()) {
             $otp = app(GenerateOtpUseCase::class)->execute(
-                new GenerateOtpCommand($userEntity->getId(), 30000)
+                new GenerateOtpCommand($userEntity->getId())
             );
             // Send via SMS gateway (or fake for dev)
             // SmsService::send($request->phone, "Your OTP is: {$otp}");
             // TODO: send OTP via SMS or WhatsApp (for now just log it)
-            // info("OTP for {$user->phone}: {$otp}");
-
-
-            return response()->json([
-                'message' => 'user verified successfully. Please verify your phone.',
-                'user' => UserData::fromEntity($userEntity),
-                'otp' => $otp,
-            ]);
+            info("OTP for {$userEntity->getPhone()}: {$otp['otp']}");
+            $message = 'user verified successfully. Please verify your otp.';
         } else {
             $token = $generateTokenUseCase->execute($userEntity->getId()); //
             //get user permissions and menus
             $userMenus = $getNavigationTreeUseCase->execute(null, $userEntity->getId());
             $userRepository->saveConnexion($userEntity->getId(), null);
-            return response()->json([
-                'token_type' => 'Bearer',
-                'access_token' => $token,
-                'user' => UserData::fromEntity($userEntity),
-                'user_menus' => $userMenus,
-            ]);
+            $message = 'User logged in successfully';
         }
+
+        return response()->json([
+            'message' => $message,
+            'access_token' => isset($token) ? $token : null,
+            'user' => UserData::fromEntity($userEntity),
+            'user_menus' => $userMenus,
+            'otp_expires_at' => isset($otp) ? $otp['expires_at'] : null,
+        ]);
     }
 
     public function register(
@@ -220,14 +228,14 @@ class AuthController extends BaseController
                 id: $result['user_id'],
                 phoneVerifiedAt: CarbonImmutable::now(),
             );
-
+            $message = $result['message'] ?? '';
             $userData = $updateProfileUseCase->execute($updateCommande);
             $token = $generateTokenUseCase->execute($validated['user_id']); //
             //get user permissions and menus
             $userMenus = $getNavigationTreeUseCase->execute(null, $validated['user_id']);
             $userRepository->saveConnexion($validated['user_id'], $validated['otp_code']);
             return response()->json([
-                'token_type' => 'Bearer',
+                'message' => $message,
                 'access_token' => $token,
                 'user' => $userData,
                 'user_menus' => $userMenus,
