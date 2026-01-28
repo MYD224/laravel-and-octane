@@ -5,10 +5,13 @@ namespace App\Modules\Navigation\Interface\Http\Controllers;
 use App\Core\Contracts\Cache\CacheServiceInterface;
 use App\Core\Interface\Controllers\BaseController;
 use App\Modules\Authentication\Domain\ValueObjects\Id;
+use App\Modules\Navigation\Application\V1\Commands\AddMenuAccessModeCommand;
+use App\Modules\Navigation\Application\V1\UseCases\AddMenuAccessModeUseCase;
 use App\Modules\Navigation\Application\V1\UseCases\AddMenuItemUseCase;
 use App\Modules\Navigation\Application\V1\UseCases\GetNavigationTreeUseCase;
 use App\Modules\Navigation\Domain\Entities\MenuItemEntity;
 use App\Modules\Navigation\Domain\Enums\MenuType;
+use App\Modules\Navigation\Domain\Exceptions\MenuItemNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
@@ -50,8 +53,7 @@ class NavigationController extends BaseController
         $validator = Validator::make($request->all(), [
             'code'          => 'required|string|max:255',
             'default_label' => 'required|array', // Should be array like {"en": "Label", "fr": "Étiquette"}
-            // 'default_label.en' => 'required|string|max:255',
-            'type'          => 'required|string|in:menu,tab', // Fixed typo: 'require' -> 'required'
+            'type'          => 'required|string|in:menu,tab',
             'order'         => 'required|integer|max:100',
             'path'          => 'required|string|max:255',
             'icon'          => 'required|string|max:255',
@@ -88,13 +90,45 @@ class NavigationController extends BaseController
             // children: []
         );
 
-        // You'll need to persist this to database here
-        // $this->menuRepository->save($menu);
         $menu = $addMenuItemUseCase->execute($menu);
 
         return response()->json([
             'data' => $menu,
             'message' => 'Menu item created successfully'
+        ], 201);
+    }
+
+    public function addMenuAccessModes(Request $request, AddMenuAccessModeUseCase $useCase)
+    {
+        $validator = Validator::make($request->all(), [
+            'menu_id'          => 'required|string|max:255',
+            'access_modes' => 'required|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        try {
+            $resutl = $useCase->execute(
+                new AddMenuAccessModeCommand(
+                    menuId: $request->menu_id,
+                    accessModes: $request->access_modes
+                )
+            );
+        } catch (MenuItemNotFoundException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while adding access modes',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+
+        return response()->json([
+            'message' => 'Access added sucessfully'
         ], 201);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Navigation\Infrastructure\Repositories;
 
+use App\Models\Permission;
 use App\Modules\Authentication\Domain\ValueObjects\Id;
 use App\Modules\Navigation\Domain\Entities\MenuItemEntity;
 use App\Modules\Navigation\Domain\Repositories\MenuItemRepositoryInterface;
@@ -35,5 +36,25 @@ class EloquentMenuItemRepository implements MenuItemRepositoryInterface
 
 
         return $menuItem;
+    }
+
+    public function findById(string $id): ?MenuItem
+    {
+        $menu = MenuItem::find($id);
+        return $menu ?? null;
+    }
+
+    public function addMenuAccessMode(string $menuId, array $accessModes)
+    {
+        $menu = MenuItem::find($menuId);
+        if ($menu) {
+            foreach ($accessModes as $action) {
+                $permissionName = $menu->code . '.' . $action;
+                Permission::firstOrCreate([
+                    'name' => $permissionName,
+                    'guard_name' => 'api'
+                ]);
+            }
+        }
     }
 }

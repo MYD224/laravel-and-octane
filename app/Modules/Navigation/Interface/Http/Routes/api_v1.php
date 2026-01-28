@@ -9,6 +9,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:api'])->group(function () {
         Route::get('/navigation', [NavigationController::class, 'getUserMenu']);
-        Route::post('/navigation/add-menu', [NavigationController::class, 'addMenu']);
+        Route::post('/navigation/menus/', [NavigationController::class, 'addMenu']);
+        Route::post('/navigation/add-access-mode', [NavigationController::class, 'addMenuAccessModes']);
     });
 });

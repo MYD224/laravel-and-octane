@@ -3,7 +3,6 @@
 namespace App\Modules\Navigation\Application\V1\UseCases;
 
 use App\Core\Contracts\Cache\CacheServiceInterface;
-use App\Modules\Navigation\Domain\Entities\MenuItem;
 use App\Modules\Navigation\Domain\Repositories\MenuItemRepositoryInterface;
 use Exception;
 

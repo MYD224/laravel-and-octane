@@ -11,4 +11,6 @@ interface MenuItemRepositoryInterface
     /** @return Collection<MenuItem> */
     public function getAllWithOverrides(string | null $structureId): Collection;
     public function addMenu(MenuItemEntity $menu): MenuItem;
+    public function addMenuAccessMode(string $menuId, array $accessModes);
+    public function findById(string $id): ?MenuItem;
 }

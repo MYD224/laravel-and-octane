@@ -34,8 +34,17 @@ class GetNavigationTreeUseCase
 
     private function buildTree($items, $parentId, $structureId, $user, $locale): array
     {
+
         return $items->where('parent_id', $parentId)
-            ->filter(fn($item) => $user->hasPermissionTo("{$item->code}.view", "api")) // Security Gate
+            ->filter(
+                function ($item) use ($user) {
+                    try {
+                        return $user->hasPermissionTo("{$item->code}.view", "api");
+                    } catch (\Exception $e) {
+                        return false; //  if permission doesn't exist
+                    }
+                }
+            ) // Security Gate
             ->filter(function ($item) {
                 // Check if the tenant explicitly hid this item
                 $override = $item->overrides->first();
