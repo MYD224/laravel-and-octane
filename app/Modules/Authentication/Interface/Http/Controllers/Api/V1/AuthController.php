@@ -68,8 +68,8 @@ class AuthController extends BaseController
             return response()->json(['message' => 'User not found.'], 404);
         }
 
-        if (!$userEntity->getPhoneVerifiedAt()) {
-            return response()->json(['message' => 'Please verify your phone first.'], 403);
+        if (!$userEntity->getPhoneVerifiedAt() && !$userEntity->getEmailVerifiedAt()) {
+            return response()->json(['message' => 'Please verify your phone or email first.', 'mustVerifyAccount' => true], 403);
         }
 
         // Check user status
@@ -227,6 +227,48 @@ class AuthController extends BaseController
             $updateCommande = new UpdateUserProfileCommand(
                 id: $result['user_id'],
                 phoneVerifiedAt: CarbonImmutable::now(),
+                emailVerifiedAt: null
+            );
+            $message = $result['message'] ?? '';
+            $userData = $updateProfileUseCase->execute($updateCommande);
+            $token = $generateTokenUseCase->execute($validated['user_id']); //
+            //get user permissions and menus
+            $userMenus = $getNavigationTreeUseCase->execute(null, $validated['user_id']);
+            $userRepository->saveConnexion($validated['user_id'], $validated['otp_code']);
+            return response()->json([
+                'message' => $message,
+                'access_token' => $token,
+                'user' => $userData,
+                'user_menus' => $userMenus,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json(["message" => $th->getMessage()], 400);
+        }
+    }
+
+    public function verifyEmail(
+        UpdateUserProfileUseCase $updateProfileUseCase,
+        GenerateTokenUseCase $generateTokenUseCase,
+        GetNavigationTreeUseCase $getNavigationTreeUseCase,
+        UserRepositoryInterface $userRepository
+    ) {
+        $validated = request()->validate([
+            'user_id' => 'required|string',
+            'otp_code'     => 'required|string',
+        ]);
+
+        try {
+
+            $result = app(VerifyOtpUseCase::class)->execute(
+                new VerifyOtpCommand(
+                    userId: $validated['user_id'],
+                    otp: $validated['otp_code']
+                )
+            );
+            $updateCommande = new UpdateUserProfileCommand(
+                id: $result['user_id'],
+                phoneVerifiedAt: null,
+                emailVerifiedAt: CarbonImmutable::now(),
             );
             $message = $result['message'] ?? '';
             $userData = $updateProfileUseCase->execute($updateCommande);

@@ -20,7 +20,7 @@ class UserEntity
         private string $gender,
         private ?PhoneNumber $phone,
         private string $hashedPassword,
-        private string $status,
+        private UserStatus | string $status = UserStatus::ACTIVE->value,
         private ?bool $isSendOtp,
         private ?CarbonImmutable $phoneVerifiedAt = null,
         private ?CarbonImmutable $emailVerifiedAt = null,
@@ -40,11 +40,11 @@ class UserEntity
         string $gender,
         CarbonImmutable | null $phoneVerifiedAt,
         Email $email,
-        string $status,
+        UserStatus $status,
         string $hashedPassword,
         ?bool $isSendOtp,
         ?PhoneNumber $phone = null,
-        ?CarbonImmutable $emailVerifiedAt = null,
+        CarbonImmutable | null $emailVerifiedAt,
         ?string $authProvider = null,
         ?string $authProviderId = null,
     ): self {
@@ -53,7 +53,7 @@ class UserEntity
 
     public function activate(): void
     {
-        // $this->status = UserStatus::ACTIVE;
+        $this->status = UserStatus::ACTIVE;
     }
 
 
@@ -65,7 +65,7 @@ class UserEntity
         ?string $lastname = null,
         ?string $gender = null,
         ?PhoneNumber $phone = null,
-        ?string $status = null,
+        ?UserStatus $status = null,
         ?string $hashedPassword = null,
         ?CarbonImmutable $phoneVerifiedAt = null,
         ?CarbonImmutable $emailVerifiedAt = null,
@@ -177,7 +177,7 @@ class UserEntity
     }
 
 
-    public function getStatus(): string
+    public function getStatus(): UserStatus
     {
         return $this->status;
     }

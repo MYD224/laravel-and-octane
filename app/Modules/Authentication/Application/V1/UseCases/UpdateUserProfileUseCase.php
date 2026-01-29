@@ -7,18 +7,13 @@ use App\Modules\Authentication\Application\Exceptions\CannotUpdateUserException;
 use App\Modules\Authentication\Application\Services\HashingService;
 use App\Modules\Authentication\Application\V1\Commands\UpdateUserProfileCommand;
 use App\Modules\Authentication\Application\V1\Data\UserData;
-use App\Modules\Authentication\Application\V1\Handlers\UpdateUserProfileHandler;
 use App\Modules\Authentication\Domain\Repositories\UserRepositoryInterface;
-use App\Modules\Authentication\Domain\ValueObjects\Id;
-use App\Modules\Authentication\Infrastructure\Persistence\Eloquent\Models\User;
 use App\Modules\User\Domain\Exceptions\UserNotFoundException;
-use Illuminate\Support\Facades\Log;
 use Carbon\CarbonImmutable;
 
 class UpdateUserProfileUseCase
 {
     public function __construct(
-        // private UpdateUserProfileHandler $handler,
         private readonly UserRepositoryInterface $userRepository,
         private readonly HashingService $hashingService,
         private readonly CacheServiceInterface $cache,
@@ -36,35 +31,26 @@ class UpdateUserProfileUseCase
             if (!$userEntity) throw new UserNotFoundException();
             // return UserData::fromEntity($userEntity);
 
-            if (!$userEntity->getPhoneVerifiedAt()) {
+            // Préparer les nouvelles valeurs
+            $phoneVerifiedAt = $command->phoneVerifiedAt;
+            $emailVerifiedAt = $command->emailVerifiedAt;
 
-                // Préparer les nouvelles valeurs
-                $phoneVerifiedAt = CarbonImmutable::parse($command->phoneVerifiedAt);
+            // $status = $userEntity->getStatus();
 
-                $status = $userEntity->getStatus();
+            // Mettre à jour l'utilisateur
+            $userEntity->update(
+                phoneVerifiedAt: $phoneVerifiedAt != null ? CarbonImmutable::parse($phoneVerifiedAt) : null,
+                emailVerifiedAt: $emailVerifiedAt != null ? CarbonImmutable::parse($emailVerifiedAt) : null
+            );
 
-                // Mettre à jour l'utilisateur
-                $userEntity->update(
-                    // status: $status,
-                    phoneVerifiedAt: $phoneVerifiedAt,
-                );
-
-                // $updatedUserEntity = $userEntity;
-                // Persister les modifications
-                $updatedUserEntity = $this->userRepository->save($userEntity);
-                $this->cache->delete("user:" . $command->id . ":session");
-                $this->cache->set(
-                    key: "user:" . $command->id . ":session",
-                    ttl: 3600,
-                    value: $updatedUserEntity
-                );
-            } else {
-                $updatedUserEntity = $userEntity;
-            }
-
-
-            // 5. Emit event
-            // event(new UserUpdatedEvent($user));
+            // Persister les modifications
+            $updatedUserEntity = $this->userRepository->save($userEntity);
+            $this->cache->delete("user:" . $command->id . ":session");
+            $this->cache->set(
+                key: "user:" . $command->id . ":session",
+                ttl: 3600,
+                value: $updatedUserEntity
+            );
 
 
             return UserData::fromEntity($updatedUserEntity);

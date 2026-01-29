@@ -19,7 +19,7 @@ class EloquentUserRepository implements UserRepositoryInterface
 {
     public function save(UserEntity $user): UserEntity
     {
-        $status = Status::where('category', 'Utilisateur')->where('code', $user->getStatus())->first();
+        $status = Status::where('category', 'Utilisateur')->where('code', $user->getStatus()->value())->first();
         // if(isset($user->getStatus())){
         // }
         $user = ModelsUser::updateOrCreate(
@@ -153,6 +153,7 @@ class EloquentUserRepository implements UserRepositoryInterface
         $phone = $model->phone ? new PhoneNumber($model->phone) : null;
         // $status = $model->status ?? UserStatus::ACTIVE->value;
         $phoneVerifiedAt = $model->phone_verified_at ? CarbonImmutable::parse($model->phone_verified_at) : null;
+        $emailVerifiedAt = $model->email_verified_at ? CarbonImmutable::parse($model->email_verified_at) : null;
         return UserEntity::register(
             id: new Id($model->id),
             // fullname: $model->fullname,
@@ -163,10 +164,11 @@ class EloquentUserRepository implements UserRepositoryInterface
             isSendOtp: $model->is_send_otp,
             phoneVerifiedAt: $phoneVerifiedAt,
             email: new Email($model->email),
-            status: $status,
+            status: UserStatus::from($status),
             hashedPassword: $model->password,
             authProviderId: $model->provider_id,
             authProvider: $model->auth_provider,
+            emailVerifiedAt: $emailVerifiedAt
         );
     }
 }

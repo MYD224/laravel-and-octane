@@ -37,7 +37,7 @@ class UserData extends Data
             gender: $userEntity->getGender(),
             phone: $userEntity->getPhoneNumber(),
             email: $userEntity->getEmail(),
-            status: $userEntity->getStatus(),
+            status: $userEntity->getStatus()->value(),
             isSendOtp: $userEntity->getIsSendOtp(),
             phoneVerifiedAt: $userEntity->getPhoneVerifiedAt(),
             emailVerifiedAt: $userEntity->getEmailVerifiedAt()
